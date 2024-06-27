@@ -2,6 +2,6 @@ package com.wits_generator.service;
 
 public interface MessageService {
 
-    void sendMessage(String text);
+    void sendMessage(InclinometryDataGenerator DataGenerator);
 
 }
