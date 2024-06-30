@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+
+
 public class InclinometryDTO {
 
     private String inclinometrySID;// "0701PLOSCHAD\n" + //Идентификатор скважины
@@ -13,12 +15,13 @@ public class InclinometryDTO {
 
     private String inclinometryDate;//"07050\n" + //Дата
     private String inclinometryTime;//"07060\n" + //Время
+    private int status=1;  ////"07070\n"код деятельности
 
     private double inclinometryDepth=0;//"07083408" Глубина по показанию датчика – измеренная
     private double inclinometryNS=0;// "07180" Положение по оси Север-Юг (m)
     private double inclinometryWE=0;//"07190" Положение по оси Восток-Запад (m)
 
-    public InclinometryDTO(String SID, int SID2, int MID, int PID){
+    public InclinometryDTO(String SID, int SID2, int MID, int PID, int status){
         SimpleDateFormat formaterD = new SimpleDateFormat("yyMMdd");
         SimpleDateFormat formaterT = new SimpleDateFormat("HHmmss");
         Calendar cal = Calendar.getInstance();
@@ -31,6 +34,7 @@ public class InclinometryDTO {
         inclinometrySID2=SID2;
         inclinometryMID = MID;
         inclinometryPID= PID;
+        this.status=status;
     };
 
     @Override
@@ -42,6 +46,7 @@ public class InclinometryDTO {
                 "0704"+inclinometryPID + '\n' +
                 inclinometryDate+ '\n' +
                 inclinometryTime + '\n' +
+                "0707"+status + '\n' +
                 "0708"+inclinometryDepth + '\n' +
                 "0718"+inclinometryNS+ '\n' +
                 "0719"+inclinometryWE+ '\n' +
@@ -58,5 +63,9 @@ public class InclinometryDTO {
 
     public void setInclinometryWE(double inclinometryWE) {
         this.inclinometryWE = inclinometryWE;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

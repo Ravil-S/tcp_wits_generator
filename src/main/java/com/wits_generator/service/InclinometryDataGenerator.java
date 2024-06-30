@@ -1,13 +1,18 @@
 package com.wits_generator.service;
 
 import com.wits_generator.DTO.InclinometryDTO;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
+@Service
 public class InclinometryDataGenerator {
 
     private  boolean isActive = true;
 
     private double inclinometryDepth=0;//"07083408" Глубина по показанию датчика – измеренная
-   private double deptDelta=10;
+    private double deptDelta=10; //длина участка обновления цикла
 
     private double inclinometryNS=0;// "07180" Положение по оси Север-Юг (m)
     private double inclinometryWE=0;//"07190" Положение по оси Восток-Запад (m)
@@ -17,39 +22,113 @@ public class InclinometryDataGenerator {
     private int inclinometryMID=0;// "07032\n" + //Идентификатор записи
     private int inclinometryPID=0;//"07040\n" + //Идентификатор последовательности записей
 
+    private Date statusLastTime = new Date();
+    private Date deptLastTime = new Date();
+    private int status=1;  //код деятельности
+    private double speedStatusUpdate=1000; //время смены код деятельности мс
+    private double speedDeptIncrease=0.1; //Cкорость увеличения глубины м/с
+
     public InclinometryDataGenerator() {    }
 
     public String getNewInclinometryData() {
         InclinometryDTO inclinometryDTO = new InclinometryDTO(inclinometrySID, inclinometrySID2,
-                inclinometryMID, inclinometryPID);
+                inclinometryMID, inclinometryPID, status);
 
         if (isActive== false) {return inclinometryDTO.toString();}
 
         double k = 0.1;
         double count = 10/0.1;
-        inclinometryNS= inclinometryNS+(Math.random()-0.5) *k;
-        inclinometryWE= inclinometryWE+(Math.random()-0.5) *k;
+      //  inclinometryNS= inclinometryNS+(Math.random()-0.5) *k;
+      //  inclinometryWE= inclinometryWE+(Math.random()-0.5) *k;
 
         inclinometryDTO.setInclinometryWE(Math.round(inclinometryWE*count)/count);
         inclinometryDTO.setInclinometryNS(Math.round(inclinometryNS*count)/count);
         inclinometryDTO.setInclinometryDepth(Math.round(inclinometryDepth*count)/count);
-        inclinometryDepth=inclinometryDepth+deptDelta+((Math.random()-0.5) *0.2*deptDelta);
+       // inclinometryDepth=inclinometryDepth+deptDelta+((Math.random()-0.5) *0.2*deptDelta);
         inclinometryMID++;
-
-        if (inclinometryDepth>6000) {
-            inclinometryDepth = 0;//"07083408" Глубина по показанию датчика – измеренная
-            inclinometryNS = 0;// "07180" Положение по оси Север-Юг (m)
-            inclinometryWE = 0;//"07190" Положение по оси Восток-Запад (m)
-
-            inclinometryMID=0;// "07032\n" + //Идентификатор записи
-            inclinometryPID=0;//"07040\n" + //Идентификатор последовательности записей
-        }
 
         return inclinometryDTO.toString();
     }
 
     public void stop() {isActive= false;}
     public void start() {isActive= true;}
+
+    @Scheduled(initialDelay = 1000, fixedRate = 100)
+    public void workCycle(){
+        Date currentTime = new Date();
+        if (isActive== true ) {
+            if (currentTime.getTime() > (statusLastTime.getTime() + speedStatusUpdate)) {
+                statusLastTime = new Date();
+                if (status == 1) {
+                    status = 100;
+                } else if (status == 105) {
+                    status = 1;
+                } else if (status == 14) {
+                    status = 0;
+                    newDirection();
+                }
+                status++;
+                System.out.println("status " + status);
+            }
+            increaseDept();
+        }
+    }
+
+    public void increaseDept(){
+        Date currentTime = new Date();
+
+        if (status==4 || status==9) {
+            long time=currentTime.getTime() - deptLastTime.getTime();
+            double deltaDepth = speedDeptIncrease*(time/1000);
+            inclinometryDepth = inclinometryDepth+deltaDepth+((Math.random()-0.5) *0.2*deltaDepth);
+            deptLastTime = new Date();
+            if (inclinometryDepth>6000) {restart();}
+        }
+    }
+
+    public void newDirection(){
+        double k = 0.1;
+        double count = 10/0.1;
+        inclinometryNS= inclinometryNS+(Math.random()-0.5) *k;
+        inclinometryWE= inclinometryWE+(Math.random()-0.5) *k;
+    }
+
+   public void restart(){
+           inclinometryDepth = 0;//"07083408" Глубина по показанию датчика – измеренная
+           inclinometryNS = 0;// "07180" Положение по оси Север-Юг (m)
+           inclinometryWE = 0;//"07190" Положение по оси Восток-Запад (m)
+           inclinometryMID=0;// "07032\n" + //Идентификатор записи
+           inclinometryPID++;//"07040\n" + //Идентификатор последовательности записей
+            statusLastTime = new Date();
+            deptLastTime = new Date();
+            status=1;  //код деятельности
+       }
+}
+
+    /*
+1. Накручивание свечи на силовой верхний привод. СВЧ свинчивается со свечой и БИ.
+101 Подача свечи на ось скважины.
+102 Перемещение свечи от оси скважины в подсвечник/укладка в соответствующую гребенку на платформе.
+103 Захват свечи в автоматическом элеваторе.
+104 Смазка и очистка резьбы перед свинчиванием.
+105 Прием и сопровождение одиночной бурильной или обсадной трубы на ось скважины.
+2. Выход на режим. Для подачи бурового раствора запускаются насосы, с клиньев снимается БИ, после чего начинается вращение буровых
+3. Подход к забою. по росту давления, что позволяет определить, что буровая колонна достигла забоя.
+4.Бурение с вращением (роторным способом) с контролем таких параметров, как нагрузка на забой, перепад давления, крутящий момент и скорость проходки.
+5. Отход от забоя на 1-2 метра. После достижения забоя происходит остановка вращения БИ.
+6. Подъем-спуск БИ на расстояние 7-15 метров без вращения.
+7. Направленное бурение без вращения буровой колонны и подход к забою.
+Вращается только СВП (режим осцилляцииИ).
+8. Отход от забоя на 1-2 метра
+9. Выход на режим с вращением СВП и продолжение бурения с вращением.
+10. Выработка нагрузки — регулировании
+11. Проработка – движение вверх/вниз с вращением и циркуляцией бурового раствора.
+12. Расхаживание (при необходимости) для удаления накопленных отходов с забоя.
+13. Становление в клинья.
+14. Остановка подачи бурового раствора, завершение бурения.
+
+     */
+
 
 /*
     final String WITS_TEXT ="&&\n" + //ЗАПИСЬ № 1: ОБЩЕЕ: ЗАПИСЬ ДАННЫХ ПО ВРЕМЕНИ
@@ -112,4 +191,4 @@ public class InclinometryDataGenerator {
             "07210\n" + // Тенденция смещения бурового инструмента
             "!!";
 *////
-}
+

@@ -13,8 +13,10 @@ import java.util.Map;
 public class MessageJobScheduler {
 
     private MessageService messageService;
+    @Autowired
+    InclinometryDataGenerator inclinometryDataGenerator;
 
-    private InclinometryDataGenerator inclinometryDataGenerator=new InclinometryDataGenerator();
+  //  private InclinometryDataGenerator inclinometryDataGenerator=new InclinometryDataGenerator();
 
     @Autowired
     public MessageJobScheduler(MessageService messageService) {
