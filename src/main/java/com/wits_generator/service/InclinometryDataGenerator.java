@@ -25,7 +25,7 @@ public class InclinometryDataGenerator {
     private Date statusLastTime = new Date();
     private Date deptLastTime = new Date();
     private int status=1;  //код деятельности
-    private double speedStatusUpdate=1000; //время смены код деятельности мс
+    private double speedStatusUpdate=3000; //время смены код деятельности мс
     private double speedDeptIncrease=0.1; //Cкорость увеличения глубины м/с
 
     public InclinometryDataGenerator() {    }
@@ -77,7 +77,7 @@ public class InclinometryDataGenerator {
     public void increaseDept(){
         Date currentTime = new Date();
 
-        if (status==4 || status==9) {
+        if (status==2 || status==4 || status==7 || status==9) {
             long time=currentTime.getTime() - deptLastTime.getTime();
             double deltaDepth = speedDeptIncrease*(time/1000);
             inclinometryDepth = inclinometryDepth+deltaDepth+((Math.random()-0.5) *0.2*deltaDepth);
