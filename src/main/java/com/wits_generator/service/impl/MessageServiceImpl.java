@@ -29,7 +29,7 @@ public class MessageServiceImpl implements MessageService {
         LOGGER.info("Receive response: {}", response);*/
         String message = inclinometryDataGenerator.getNewInclinometryData();
 
-        System.out.println(message);
+       // System.out.println(message);
         byte[] responseBytes = tcpClientGateway.send(message.getBytes());
         String response = new String(responseBytes);
         if (response.contains("stop")) {inclinometryDataGenerator.stop();}

@@ -27,6 +27,8 @@ public class InclinometryDataGenerator {
     private int status=1;  //код деятельности
     private double speedStatusUpdate=3000; //время смены код деятельности мс
     private double speedDeptIncrease=0.1; //Cкорость увеличения глубины м/с
+    private double angleNS=0;
+    private double angleWE=0;
 
     public InclinometryDataGenerator() {    }
 
@@ -76,21 +78,24 @@ public class InclinometryDataGenerator {
 
     public void increaseDept(){
         Date currentTime = new Date();
-
         if (status==2 || status==4 || status==7 || status==9) {
             long time=currentTime.getTime() - deptLastTime.getTime();
-            double deltaDepth = speedDeptIncrease*(time/1000);
-            inclinometryDepth = inclinometryDepth+deltaDepth+((Math.random()-0.5) *0.2*deltaDepth);
+            double deltaDepth = speedDeptIncrease*((double) time/1000);
+            double deltaDepth2=deltaDepth+((Math.random()-0.5) *0.2*deltaDepth);
+            inclinometryDepth = inclinometryDepth+deltaDepth2;
             deptLastTime = new Date();
+            inclinometryNS=inclinometryNS+deltaDepth2*Math.tan(Math.toRadians(angleNS));
+            inclinometryWE=inclinometryWE+deltaDepth2*Math.tan(Math.toRadians(angleWE));
             if (inclinometryDepth>6000) {restart();}
         }
     }
 
     public void newDirection(){
-        double k = 0.1;
-        double count = 10/0.1;
-        inclinometryNS= inclinometryNS+(Math.random()-0.5) *k;
-        inclinometryWE= inclinometryWE+(Math.random()-0.5) *k;
+        double k = 5;
+
+        angleNS=(Math.random()-0.5) *k;
+        angleWE=(Math.random()-0.5) *k;
+        System.out.println("angleNS "+angleNS);
     }
 
    public void restart(){
