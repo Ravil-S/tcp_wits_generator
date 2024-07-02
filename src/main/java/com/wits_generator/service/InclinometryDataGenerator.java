@@ -25,8 +25,9 @@ public class InclinometryDataGenerator {
     private Date statusLastTime = new Date();
     private Date deptLastTime = new Date();
     private int status=1;  //код деятельности
-    private double speedStatusUpdate=3000; //время смены код деятельности мс
-    private double speedDeptIncrease=0.1; //Cкорость увеличения глубины м/с
+    private double speedStatusUpdate=5000; //время смены код деятельности мс
+    private double speedDeptIncrease=0.3; //Cкорость увеличения глубины м/с
+    private double speedRndDeptIncrease=0;
     private double angleNS=0;
     private double angleWE=0;
 
@@ -60,6 +61,7 @@ public class InclinometryDataGenerator {
         Date currentTime = new Date();
         if (isActive== true ) {
             if (currentTime.getTime() > (statusLastTime.getTime() + speedStatusUpdate)) {
+                System.out.println("update status " + status);
                 statusLastTime = new Date();
                 if (status == 1) {
                     status = 100;
@@ -70,8 +72,9 @@ public class InclinometryDataGenerator {
                     newDirection();
                 }
                 status++;
-                System.out.println("status " + status);
+
             }
+            System.out.println("status " + status);
             increaseDept();
         }
     }
@@ -80,13 +83,18 @@ public class InclinometryDataGenerator {
         Date currentTime = new Date();
         if (status==2 || status==4 || status==7 || status==9) {
             long time=currentTime.getTime() - deptLastTime.getTime();
-            double deltaDepth = speedDeptIncrease*((double) time/1000);
-            double deltaDepth2=deltaDepth+((Math.random()-0.5) *0.2*deltaDepth);
+            double deltaDepth = speedRndDeptIncrease*((double) time/1000);
+            double deltaDepth2=deltaDepth+((Math.random()-0.5) *0.5*deltaDepth);
             inclinometryDepth = inclinometryDepth+deltaDepth2;
             deptLastTime = new Date();
             inclinometryNS=inclinometryNS+deltaDepth2*Math.tan(Math.toRadians(angleNS));
             inclinometryWE=inclinometryWE+deltaDepth2*Math.tan(Math.toRadians(angleWE));
+            System.out.println("deltaDepth2 "+deltaDepth2);
+            System.out.println("inclinometryDepth "+inclinometryDepth);
             if (inclinometryDepth>6000) {restart();}
+        }else{
+            deptLastTime = new Date();
+            speedRndDeptIncrease=speedDeptIncrease+((Math.random()-0.5) *0.2*speedDeptIncrease);
         }
     }
 
